@@ -22,6 +22,9 @@ module sqlServerModule 'Sql/servers.bicep' = {
 
 module sqlDatabaseModule 'Sql/servers/databases.bicep' = {
   name: 'sqlDatabaseModule'
+  dependsOn: [
+    sqlServerModule
+  ]
   params: {
     defaultResourceName: defaultResourceName
     sqlServerName: sqlServerModule.outputs.sqlServerName

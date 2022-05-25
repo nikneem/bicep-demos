@@ -1,8 +1,9 @@
 param queues array
+param location string = resourceGroup().location
 
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   name: 'servicebus-name'
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard'
   }

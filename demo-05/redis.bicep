@@ -2,6 +2,7 @@
 
 param name string
 param sku object
+param location string = resourceGroup().location
 
 @allowed([
   'Disabled'
@@ -17,12 +18,10 @@ param enableNonSsl bool = false
 
 resource redisCache 'Microsoft.Cache/redis@2020-12-01' = {
   name: name
-  location: resourceGroup().location
+  location: location
   properties: {
     sku: sku
     enableNonSslPort: enableNonSsl
     publicNetworkAccess: publicNetworkAccess
   }
 }
-
-output primaryKey string = listKeys(redisCache.id, redisCache.apiVersion).primaryKey

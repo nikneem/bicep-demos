@@ -7,11 +7,13 @@ param systemName string
 ])
 param environmentName string
 
-var defaultResourceName = '${systemName}-${environmentName}'
+param location string = resourceGroup().location
+
+var defaultResourceName = toLower('${systemName}-${environmentName}')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   name: toLower(replace(defaultResourceName, '-', ''))
-  location: resourceGroup().location
+  location: location
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
