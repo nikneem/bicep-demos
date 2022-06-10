@@ -1,5 +1,6 @@
 param defaultResourceName string
 param sqlServerName string
+param location string = resourceGroup().location
 
 param sku object = {
   name: 'Standard'
@@ -10,7 +11,7 @@ param sku object = {
 var resourceName = '${defaultResourceName}-sqldb'
 
 resource database 'Microsoft.Sql/servers/databases@2021-02-01-preview' = {
-  location: resourceGroup().location
+  location: location
   name: '${sqlServerName}/${resourceName}'
   sku: sku
   properties: {}

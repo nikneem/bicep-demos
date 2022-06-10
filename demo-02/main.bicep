@@ -7,6 +7,8 @@ param systemName string
 ])
 param environmentName string
 
+param location string = resourceGroup().location
+
 @secure()
 param superSecretPassword string
 
@@ -17,6 +19,7 @@ module sqlServerModule 'Sql/servers.bicep' = {
   params: {
     defaultResourceName: defaultResourceName
     administratorPassword: superSecretPassword
+    location: location
   }
 }
 
@@ -28,5 +31,6 @@ module sqlDatabaseModule 'Sql/servers/databases.bicep' = {
   params: {
     defaultResourceName: defaultResourceName
     sqlServerName: sqlServerModule.outputs.sqlServerName
+    location: location
   }
 }

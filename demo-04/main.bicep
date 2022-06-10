@@ -12,6 +12,8 @@ param locationAbbreviation string
 ])
 param environmentName string
 
+param location string = deployment().location
+
 param basicAppSettings array = [
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
@@ -44,14 +46,14 @@ param sqlServerDatabaseSku object = {
 var resourceGroupName = toLower('${serviceName}-${environmentName}-${locationAbbreviation}')
 var defaultResourceName = toLower('${serviceName}-${environmentName}-${locationAbbreviation}')
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+resource targetResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: resourceGroupName
-  location: deployment().location
+  location: location
 }
 
 module applicationInsightModule 'Insights/components.bicep' = {
   name: 'applicationInsightModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
   }
@@ -59,7 +61,7 @@ module applicationInsightModule 'Insights/components.bicep' = {
 
 module storageAccountModule 'Storage/storageAccounts.bicep' = {
   name: 'storageModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
     skuName: storageAccountSku
@@ -68,7 +70,7 @@ module storageAccountModule 'Storage/storageAccounts.bicep' = {
 
 module appServicePlan 'Web/serverFarms.bicep' = {
   name: 'appServicePlan'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
   }
@@ -76,7 +78,7 @@ module appServicePlan 'Web/serverFarms.bicep' = {
 
 module webAppModule 'Web/sites.bicep' = {
   name: 'webAppModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
     appServicePlanId: appServicePlan.outputs.id
@@ -85,7 +87,7 @@ module webAppModule 'Web/sites.bicep' = {
 
 module keyVaultModule 'KeyVault/vault.bicep' = {
   name: 'keyVaultModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
   }
@@ -93,7 +95,7 @@ module keyVaultModule 'KeyVault/vault.bicep' = {
 
 module sqlServerModule 'Sql/servers.bicep' = {
   name: 'sqlServerModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     defaultResourceName: defaultResourceName
     administratorPassword: sqlServerPassword
@@ -103,7 +105,7 @@ module sqlServerModule 'Sql/servers.bicep' = {
 
 module sqlServerDatabaseModule 'Sql/servers/database.bicep' = {
   name: 'sqlServerDatabaseModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     sku: sqlServerDatabaseSku
     defaultResourceName: defaultResourceName
@@ -119,7 +121,7 @@ module storageAccountSecretModule 'KeyVault/vaults/secrets.bicep' = {
     storageAccountModule
   ]
   name: 'storageAccountSecretModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     keyVault: keyVaultModule.outputs.keyVaultName
     secret: storageAccountModule.outputs.secret
@@ -132,7 +134,7 @@ module sqlServerSecretModule 'KeyVault/vaults/secrets.bicep' = {
     sqlServerModule
   ]
   name: 'sqlServerSecretModule'
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     keyVault: keyVaultModule.outputs.keyVaultName
     secret: sqlServerModule.outputs.secret
@@ -145,7 +147,7 @@ module keyVaultAccessPolicyModule 'KeyVault/vaults/accessPolicies.bicep' = {
     keyVaultModule
     webAppModule
   ]
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     keyVaultName: keyVaultModule.outputs.keyVaultName
     principalId: webAppModule.outputs.servicePrincipal
@@ -158,7 +160,7 @@ module websiteConfiguration 'Web/sites/config.bicep' = {
     keyVaultModule
     keyVaultAccessPolicyModule
   ]
-  scope: resourceGroup
+  scope: targetResourceGroup
   params: {
     webAppName: webAppModule.outputs.webAppName
     appSettings: union(basicAppSettings, applicationInsightModule.outputs.appConfiguration, storageAccountSecretModule.outputs.keyVaultReference, sqlServerSecretModule.outputs.keyVaultReference)
